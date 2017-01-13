@@ -116,10 +116,35 @@ public class Main {
 
                             try {
                                 tryUDP(udpSocket, tcpSocket, randomNum);
-                            } catch (SocketTimeoutException e) {
+                                System.out.println("Listening TCP...");
+                                clientSocket = tcpSocket.accept();
+                                System.out.println("Got TCP connection");
+                                while (clientSocket.isConnected() && tx.isConnected()) {
+                                    BufferedReader inFromClient =
+                                            new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                                    DataOutputStream outToClient = new DataOutputStream(clientSocket.getOutputStream());
+                                    while (clientSocket.isConnected()) {
+                                        String clientSentence = inFromClient.readLine();
 
-                            }
-                            //try to receive request to find server
+                                        if (!connectedToServer) {
+                                            //System.out.println("Received: " + clientSentence);
+                                        } else { //send msg to server
+                                            System.out.println("Received: " + clientSentence);
+                                            //char[] myNameChars = clientSentence.toCharArray();
+                                            //myNameChars[0] = 'x';
+                                            //clientSentence = String.valueOf(myNameChars);
+                                            System.out.println("Sending "+clientSentence);
+                                            outToServer = new DataOutputStream(tx.getOutputStream());
+                                            outToServer.writeBytes(clientSentence + '\n');
+                                        }
+                                    }
+
+                                }
+                                }catch(SocketTimeoutException e){
+
+                                }
+                                //try to receive request to find server
+
                         }
                     }
 
