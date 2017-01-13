@@ -162,16 +162,8 @@ public class Main {
             //want to send offer
             System.out.println(new String(receivePacket.getData()));
 
-            byte[] offer = new byte[26];
-            String receivedString = new String(receivePacket.getData());
-            String receivedNum = receivedString.substring(17);
-            String offerString = PROGRAM_NAME+receivedNum+IPAddress.getHostAddress()+randomNum;
-            byte[] sentData2 = offerString.getBytes();
-
-
-            System.out.println(new String(sentData2));
-
-            DatagramPacket sendPacket = new DatagramPacket(sentData2, sentData2.length, InetAddress.getByName(receivePacket.getAddress().getHostAddress()), 6000);
+            byte[] sendData = makeOffer(receivePacket,randomNum,IPAddress);
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(receivePacket.getAddress().getHostAddress()), 6000);
             udpSocket.send(sendPacket);
         }
     }
