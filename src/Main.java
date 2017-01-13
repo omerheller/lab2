@@ -124,7 +124,6 @@ public class Main {
                         }
                     }
 
-                    break;
                 } catch (SocketTimeoutException e){
                     System.out.println("didnt get connection yet");
                     udpSocket.setBroadcast(true);
@@ -133,8 +132,6 @@ public class Main {
                 }
             }
 // As long as we receive data, echo that data back to the client.
-            while (true) {
-            }
         }
         catch (IOException e) {
             System.out.println(e);
