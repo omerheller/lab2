@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Main {
@@ -178,7 +177,7 @@ public class Main {
         byte[] arr1 = offerString.getBytes();
         byte[] sentData2 = new byte[4];
         sentData2 = IPAddress.getAddress();
-        byte[] receivednum = ByteBuffer.allocate(4).putInt(Integer.valueOf(receivedNum)).array();
+        byte[] receivednum = new byte[4];
         //sentData2 = offerString.getBytes();
         byte[] sendData = new byte[26];
 
