@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Main {
@@ -49,26 +50,23 @@ public class Main {
                 System.out.println("trying tcp...");
                 try {
                     clientSocket = tcpSocket.accept();
+                    System.out.println("Got TCP connection");
                     //someone connected to me using TCP
                     BufferedReader inFromClient =
                             new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                     DataOutputStream outToClient = new DataOutputStream(clientSocket.getOutputStream());
-                    String clientSentence = inFromClient.readLine();
+                    while(clientSocket.isConnected()) {
+                        String clientSentence = inFromClient.readLine();
 
-                    if(!connectedToServer){
-                        System.out.println("Received: " + clientSentence);
+                        if (!connectedToServer) {
+                            System.out.println("Received: " + clientSentence);
+                        } else { //send msg to server
+                            char[] myNameChars = clientSentence.toCharArray();
+                            myNameChars[4] = 'x';
+                            clientSentence = String.valueOf(myNameChars);
+                            outToServer.writeBytes(clientSentence);
+                        }
                     }
-                    else{ //send msg to server
-                        outToServer.writeBytes(clientSentence);
-                    }
-
-
-
-
-
-
-
-                    break;
                 } catch (SocketTimeoutException e){
                     System.out.println("didnt get connection yet");
                 }
@@ -88,18 +86,8 @@ public class Main {
                     if(receivePacket.getLength()==20){
                         System.out.println("request received from "+receivePacket.getAddress().getHostAddress());
                         //want to send offer
-                        System.out.println(new String(receivePacket.getData()));
-
-                        byte[] offer = new byte[26];
-                        String receivedString = new String(receivePacket.getData());
-                        String receivedNum = receivedString.substring(17);
-                        String offerString = PROGRAM_NAME+receivedNum+IPAddress.getHostAddress()+randomNum;
-                        byte[] sentData2 = offerString.getBytes();
-
-
-                        System.out.println(new String(sentData2));
-
-                        DatagramPacket sendPacket = new DatagramPacket(sentData2, sentData2.length, InetAddress.getByName(receivePacket.getAddress().getHostAddress()), 6000);
+                        byte[] sendData = makeOffer(receivePacket,randomNum,IPAddress);
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(receivePacket.getAddress().getHostAddress()), 6000);
                         udpSocket.send(sendPacket);
                     }
 
@@ -189,6 +177,43 @@ public class Main {
             DatagramPacket sendPacket = new DatagramPacket(sentData2, sentData2.length, InetAddress.getByName(receivePacket.getAddress().getHostAddress()), 6000);
             udpSocket.send(sendPacket);
         }
+    }
+
+    private static byte[] makeOffer(DatagramPacket receivePacket, int randomNum, InetAddress IPAddress){
+        byte[] offer = new byte[26];
+        String receivedString = new String(receivePacket.getData());
+        String receivedNum = receivedString.substring(17);
+
+        //String offerString = PROGRAM_NAME+receivedNum+IPAddress.getHostAddress()+randomNum;
+        String offerString = PROGRAM_NAME;
+        byte[] arr1 = offerString.getBytes();
+        byte[] sentData2 = new byte[4];
+        sentData2 = IPAddress.getAddress();
+        byte[] receivednum = ByteBuffer.allocate(4).putInt(Integer.valueOf(receivedNum)).array();
+        //sentData2 = offerString.getBytes();
+        byte[] sendData = new byte[26];
+
+        String left="",right="";
+        int num = randomNum;
+        right = num %10 + right;
+        num = num/10;
+        right = num %10 + right;
+        num = num/10;
+        left = num %10 + left;
+        num = num/10;
+        left = num %10 + left;
+
+        int upper = Integer.valueOf(left);
+        int lower = Integer.valueOf(right);
+
+        System.arraycopy(arr1,0,sendData,0,16);
+        System.arraycopy(receivednum,0,sendData,16,4);
+        System.arraycopy(sentData2,0,sendData,20,4);
+        //System.arraycopy(portnum,0,sendData,24,4);
+        sendData[24] = (byte) upper;
+        sendData[25] = (byte) lower;
+        System.out.println("sending message of length:" + sendData.length);
+        return sendData;
     }
 
 }
